@@ -43,7 +43,23 @@ function Apply-Patches {
     Set-Content -Path $debugPy -Value $patched -NoNewline
     Write-Host "Patched: jinja2/debug.py"
 }
-function Build-VendorZip { param([string]$SourceDir, [string]$OutputZip) }
+function Build-VendorZip {
+    param([string]$SourceDir, [string]$OutputZip)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    if (Test-Path $OutputZip) { Remove-Item $OutputZip }
+    $zip = [System.IO.Compression.ZipFile]::Open($OutputZip, 'Create')
+    try {
+        foreach ($pkg in @('jinja2','markupsafe')) {
+            $pkgDir = Join-Path $SourceDir $pkg
+            if (-not (Test-Path $pkgDir)) { continue }
+            Get-ChildItem -Recurse -File $pkgDir | ForEach-Object {
+                $rel = $_.FullName.Substring($SourceDir.Length + 1).Replace('\','/')
+                [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $rel) | Out-Null
+            }
+        }
+    } finally { $zip.Dispose() }
+    Write-Host "Created: $OutputZip"
+}
 
 $workDir = Join-Path ([System.IO.Path]::GetTempPath()) "ipy-jinja-build-$(Get-Random)"
 New-Item -ItemType Directory -Path $workDir | Out-Null
