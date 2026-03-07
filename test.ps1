@@ -29,4 +29,16 @@ result = env.get_template('t').render(name='test', items=['a','b','c'])
 "@, $scope)
     Assert-Equal $scope.GetVariable('result') 'TEST a,b,c' 'FilterRender'
 }
-function Test-ErrorHandling { <# WIP #> }
+function Test-ErrorHandling {
+    $scope = $engine.CreateScope()
+    $engine.Execute(@"
+from jinja2 import Environment, DictLoader, StrictUndefined, TemplateNotFound
+env = Environment(loader=DictLoader({}), undefined=StrictUndefined)
+try:
+    env.get_template('missing')
+    not_found = False
+except TemplateNotFound:
+    not_found = True
+"@, $scope)
+    Assert-Equal $scope.GetVariable('not_found') $true 'ErrorHandling_TemplateNotFound'
+}
