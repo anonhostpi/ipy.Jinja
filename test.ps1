@@ -42,3 +42,10 @@ except TemplateNotFound:
 "@, $scope)
     Assert-Equal $scope.GetVariable('not_found') $true 'ErrorHandling_TemplateNotFound'
 }
+
+Test-BasicRender
+Test-FilterRender
+Test-ErrorHandling
+Write-Host ''
+Write-Host "Results: $passed passed, $failed failed"
+if ($failed -gt 0) { exit 1 }
