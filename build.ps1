@@ -53,6 +53,7 @@ def _init_ugly_crap():
     Set-Content -Path $debugPy -Value $patched -NoNewline
     Write-Host "Patched: jinja2/debug.py"
     Patch-Compat $PackageDir
+    Patch-Lexer $PackageDir
 }
 function Patch-Compat {
     param([string]$PackageDir)
@@ -64,6 +65,7 @@ function Patch-Compat {
     Set-Content -Path $file -Value $patched -NoNewline
     Write-Host "Patched: jinja2/_compat.py"
 }
+function Patch-Lexer { param([string]$PackageDir) }
 function Build-VendorZip {
     param([string]$SourceDir, [string]$OutputZip)
     Add-Type -AssemblyName System.IO.Compression.FileSystem
