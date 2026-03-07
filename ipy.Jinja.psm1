@@ -3,7 +3,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 function Get-IpyJinjaZipPath {
-    <# WIP #>
+    $zip = Join-Path $PSScriptRoot 'vendor/ipy.Jinja.zip'
+    if (-not (Test-Path $zip)) {
+        throw "ipy.Jinja.zip not found at '$zip'. Run build.ps1 to generate it."
+    }
+    $zip
 }
 
 function Install-IpyJinja {
