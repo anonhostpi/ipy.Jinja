@@ -54,7 +54,16 @@ def _init_ugly_crap():
     Write-Host "Patched: jinja2/debug.py"
     Patch-Compat $PackageDir
 }
-function Patch-Compat { param([string]$PackageDir) }
+function Patch-Compat {
+    param([string]$PackageDir)
+    $file = Join-Path $PackageDir 'jinja2/_compat.py'
+    $src = Get-Content $file -Raw
+    $stub = "def url_quote(obj, safe=b'/'):`n    if isinstance(obj, str): obj = obj.encode('utf-8')`n    r = bytearray()`n    for b in obj:`n        c = bytes([b])`n        if c in (safe if isinstance(safe,bytes) else safe.encode('ascii')) or c.isalnum() or c in b'-._~': r.extend(c)`n        else: r.extend(('%{:02X}'.format(b)).encode('ascii'))`n    return r.decode('ascii')"
+    $old = "try:`n    from urllib.parse import quote_from_bytes as url_quote`nexcept ImportError:`n    from urllib import quote as url_quote"
+    $patched = $src.Replace($old, $stub)
+    Set-Content -Path $file -Value $patched -NoNewline
+    Write-Host "Patched: jinja2/_compat.py"
+}
 function Build-VendorZip {
     param([string]$SourceDir, [string]$OutputZip)
     Add-Type -AssemblyName System.IO.Compression.FileSystem
