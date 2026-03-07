@@ -3,11 +3,11 @@ topic: IPY.JINJA
 phase: discovery
 rule: 0
 feedback_iteration: 0
-baseline_commit: null
+baseline_commit: 9388e7172cf6b1169a003cab306c805d67fcc676
 last_squashed_commit: null
 created: 2026-03-07
-branch: null
-worktree: null
+branch: feat/vendor-jinja2
+worktree: ../ipy.Jinja.worktrees/feat/vendor-jinja2
 pr_number: null
 pr_url: null
 pr_state: null
