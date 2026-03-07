@@ -11,6 +11,14 @@ function Assert-Equal {
     if ($Actual -eq $Expected) { Write-Host "[PASS] $Name"; $script:passed++ }
     else { Write-Host "[FAIL] $Name`n  Expected: $Expected`n  Actual: $Actual"; $script:failed++ }
 }
-function Test-BasicRender { <# WIP #> }
+function Test-BasicRender {
+    $scope = $engine.CreateScope()
+    $engine.Execute(@"
+from jinja2 import Environment, DictLoader
+env = Environment(loader=DictLoader({'t': 'Hello {{ name }}!'}))
+result = env.get_template('t').render(name='World')
+"@, $scope)
+    Assert-Equal $scope.GetVariable('result') 'Hello World!' 'BasicRender'
+}
 function Test-FilterRender { <# WIP #> }
 function Test-ErrorHandling { <# WIP #> }
