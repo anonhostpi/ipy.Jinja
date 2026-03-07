@@ -8,9 +8,9 @@ last_squashed_commit: null
 created: 2026-03-07
 branch: feat/vendor-jinja2
 worktree: ../ipy.Jinja.worktrees/feat/vendor-jinja2
-pr_number: null
-pr_url: null
-pr_state: null
+pr_number: 1
+pr_url: https://github.com/anonhostpi/ipy.Jinja/pull/1
+pr_state: draft
 ---
 
 # RESEARCH: Vendoring Jinja2 + MarkupSafe for IronPython 3.4.2
