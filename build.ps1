@@ -33,7 +33,16 @@ function Expand-Wheel {
         }
     } finally { $zip.Dispose() }
 }
-function Apply-Patches { param([string]$PackageDir) }
+function Apply-Patches {
+    param([string]$PackageDir)
+    $debugPy = Join-Path $PackageDir 'jinja2/debug.py'
+    $src = Get-Content $debugPy -Raw
+    $pattern = '(?s)def _init_ugly_crap\(\):.*?(?=\ndef |\nclass |\Z)'
+    $stub = "def _init_ugly_crap():`n    `"``"``"Stub: ctypes traceback rewriting not supported on IronPython.`"``"``"`n    def tb_set_next(tb, next):`n        pass`n    return tb_set_next`n"
+    $patched = [regex]::Replace($src, $pattern, $stub)
+    Set-Content -Path $debugPy -Value $patched -NoNewline
+    Write-Host "Patched: jinja2/debug.py"
+}
 function Build-VendorZip { param([string]$SourceDir, [string]$OutputZip) }
 
 $workDir = Join-Path ([System.IO.Path]::GetTempPath()) "ipy-jinja-build-$(Get-Random)"
