@@ -10,7 +10,11 @@ function Get-Wheel {
     $url = "https://pypi.org/pypi/$Package/$Version/json"
     $meta = Invoke-RestMethod -Uri $url
     $wheel = $meta.urls | Where-Object { $_.packagetype -eq 'bdist_wheel' -and $_.filename -like '*none-any*' } | Select-Object -First 1
-    if (-not $wheel) { throw "No pure-Python wheel found for $Package $Version" }
+    if (-not $wheel) {
+        # Fall back to any wheel (we'll extract only .py files)
+        $wheel = $meta.urls | Where-Object { $_.packagetype -eq 'bdist_wheel' } | Select-Object -First 1
+    }
+    if (-not $wheel) { throw "No wheel found for $Package $Version" }
     $dest = Join-Path $DestDir $wheel.filename
     Invoke-WebRequest -Uri $wheel.url -OutFile $dest
     Write-Host "Downloaded: $($wheel.filename)"
@@ -70,10 +74,10 @@ function Build-VendorZip {
 $workDir = Join-Path ([System.IO.Path]::GetTempPath()) "ipy-jinja-build-$(Get-Random)"
 New-Item -ItemType Directory -Path $workDir | Out-Null
 try {
-    Get-Wheel 'Jinja2' '2.10.3' $workDir
-    Get-Wheel 'MarkupSafe' '1.1.1' $workDir
-    Expand-Wheel "$workDir/Jinja2-2.10.3-py2.py3-none-any.whl" $workDir
-    Expand-Wheel "$workDir/MarkupSafe-1.1.1-py2.py3-none-any.whl" $workDir
+    $jinja2Whl = Get-Wheel 'Jinja2' '2.10.3' $workDir
+    $markupSafeWhl = Get-Wheel 'MarkupSafe' '1.1.1' $workDir
+    Expand-Wheel $jinja2Whl $workDir
+    Expand-Wheel $markupSafeWhl $workDir
     Apply-Patches $workDir
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
     Build-VendorZip $workDir "$OutputDir/ipy.Jinja.zip"
