@@ -16,7 +16,23 @@ function Get-Wheel {
     Write-Host "Downloaded: $($wheel.filename)"
     $dest
 }
-function Expand-Wheel { param([string]$WheelPath, [string]$DestDir) }
+function Expand-Wheel {
+    param([string]$WheelPath, [string]$DestDir)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $exclude = @('asyncsupport.py','asyncfilters.py','_speedups.c','_speedups.pyd','_speedups.so')
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($WheelPath)
+    try {
+        foreach ($entry in $zip.Entries) {
+            $name = $entry.FullName
+            if ($name -notmatch '^(jinja2|markupsafe)/' ) { continue }
+            if ($name -notlike '*.py') { continue }
+            if ($exclude -contains [System.IO.Path]::GetFileName($name)) { continue }
+            $dest = Join-Path $DestDir $name
+            New-Item -ItemType Directory -Force -Path ([System.IO.Path]::GetDirectoryName($dest)) | Out-Null
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $dest, $true)
+        }
+    } finally { $zip.Dispose() }
+}
 function Apply-Patches { param([string]$PackageDir) }
 function Build-VendorZip { param([string]$SourceDir, [string]$OutputZip) }
 
