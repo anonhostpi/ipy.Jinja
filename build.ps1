@@ -5,7 +5,17 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Get-Wheel { param([string]$Package, [string]$Version, [string]$DestDir) }
+function Get-Wheel {
+    param([string]$Package, [string]$Version, [string]$DestDir)
+    $url = "https://pypi.org/pypi/$Package/$Version/json"
+    $meta = Invoke-RestMethod -Uri $url
+    $wheel = $meta.urls | Where-Object { $_.packagetype -eq 'bdist_wheel' -and $_.filename -like '*none-any*' } | Select-Object -First 1
+    if (-not $wheel) { throw "No pure-Python wheel found for $Package $Version" }
+    $dest = Join-Path $DestDir $wheel.filename
+    Invoke-WebRequest -Uri $wheel.url -OutFile $dest
+    Write-Host "Downloaded: $($wheel.filename)"
+    $dest
+}
 function Expand-Wheel { param([string]$WheelPath, [string]$DestDir) }
 function Apply-Patches { param([string]$PackageDir) }
 function Build-VendorZip { param([string]$SourceDir, [string]$OutputZip) }
