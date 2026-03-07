@@ -38,7 +38,13 @@ function Apply-Patches {
     $debugPy = Join-Path $PackageDir 'jinja2/debug.py'
     $src = Get-Content $debugPy -Raw
     $pattern = '(?s)def _init_ugly_crap\(\):.*?(?=\ndef |\nclass |\Z)'
-    $stub = "def _init_ugly_crap():`n    `"``"``"Stub: ctypes traceback rewriting not supported on IronPython.`"``"``"`n    def tb_set_next(tb, next):`n        pass`n    return tb_set_next`n"
+    $stub = @'
+def _init_ugly_crap():
+    # Stub: ctypes traceback rewriting not supported on IronPython.
+    def tb_set_next(tb, next):
+        pass
+    return tb_set_next
+'@
     $patched = [regex]::Replace($src, $pattern, $stub)
     Set-Content -Path $debugPy -Value $patched -NoNewline
     Write-Host "Patched: jinja2/debug.py"
