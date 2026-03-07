@@ -20,5 +20,13 @@ result = env.get_template('t').render(name='World')
 "@, $scope)
     Assert-Equal $scope.GetVariable('result') 'Hello World!' 'BasicRender'
 }
-function Test-FilterRender { <# WIP #> }
+function Test-FilterRender {
+    $scope = $engine.CreateScope()
+    $engine.Execute(@"
+from jinja2 import Environment, DictLoader
+env = Environment(loader=DictLoader({'t': '{{ name|upper }} {{ items|join(",") }}'}))
+result = env.get_template('t').render(name='test', items=['a','b','c'])
+"@, $scope)
+    Assert-Equal $scope.GetVariable('result') 'TEST a,b,c' 'FilterRender'
+}
 function Test-ErrorHandling { <# WIP #> }
