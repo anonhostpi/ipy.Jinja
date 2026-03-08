@@ -3,10 +3,14 @@
 #
 # Usage:
 #   . "$PSScriptRoot/ipy.Jinja.ps1"
-#   Install-IpyJinja -Engine $engine
+#   Install-IpyJinja -Engine $engine                         # in-memory only
+#   Install-IpyJinja -Path "C:\ipyenv\v3.4.2"               # disk only
+#   Install-IpyJinja -Engine $engine -Path "C:\ipyenv\v3.4.2" # both
 
 $jinja_wheel_url    = 'https://files.pythonhosted.org/packages/65/e0/eb35e762802015cab1ccee04e8a277b03f1d8e53da3ec3106882ec42558b/Jinja2-2.10.3-py2.py3-none-any.whl'
 $markupsafe_wheel_url = 'https://files.pythonhosted.org/packages/09/31/fe863b864cf3dfa11bce7a3bd41c4433d59b777ee0750b8d8c9a96f5ca98/MarkupSafe-1.1.1-cp34-cp34m-win_amd64.whl'
+
+Add-Type -AssemblyName System.IO.Compression
 
 # Patched Python source files (full content; loaded after wheel to overwrite originals)
 $patched_debug_py    = @'
@@ -1170,11 +1174,68 @@ class Lexer(object):
 '@
 
 function Install-IpyJinja {
-    param([Parameter(Mandatory)][object]$Engine)
-    $Engine.Add('/ipy/lib/site-packages', $jinja_wheel_url)
-    $Engine.Add('/ipy/lib/site-packages', $markupsafe_wheel_url)
-    $Engine.Add('/ipy/lib/site-packages/jinja2/debug.py',        $patched_debug_py)
-    $Engine.Add('/ipy/lib/site-packages/jinja2/_compat.py',      $patched_compat_py)
-    $Engine.Add('/ipy/lib/site-packages/jinja2/lexer.py',        $patched_lexer_py)
-    return $Engine
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [object]$Engine,
+
+        [Parameter()]
+        [string]$Path
+    )
+
+    if (-not $Engine -and -not $Path) {
+        throw "Install-IpyJinja requires at least one of -Engine or -Path."
+    }
+
+    # In-memory install (IronPythonEmbedded)
+    if ($Engine) {
+        $Engine.Add('/ipy/lib/site-packages', $jinja_wheel_url)
+        $Engine.Add('/ipy/lib/site-packages', $markupsafe_wheel_url)
+        $Engine.Add('/ipy/lib/site-packages/jinja2/debug.py',        $patched_debug_py)
+        $Engine.Add('/ipy/lib/site-packages/jinja2/_compat.py',      $patched_compat_py)
+        $Engine.Add('/ipy/lib/site-packages/jinja2/lexer.py',        $patched_lexer_py)
+    }
+
+    # Disk install (standard IronPython)
+    if ($Path) {
+        $sitePackages = Join-Path $Path "lib/site-packages"
+        if (-not (Test-Path $sitePackages)) {
+            New-Item -ItemType Directory -Path $sitePackages -Force | Out-Null
+        }
+
+        # Download and extract wheels in memory
+        foreach ($url in @($jinja_wheel_url, $markupsafe_wheel_url)) {
+            $response = Invoke-WebRequest -Uri $url -UseBasicParsing
+            $stream = [System.IO.MemoryStream]::new($response.Content)
+            $zip = [System.IO.Compression.ZipArchive]::new($stream, [System.IO.Compression.ZipArchiveMode]::Read)
+            foreach ($entry in $zip.Entries) {
+                if ($entry.FullName.EndsWith('/')) { continue }
+                $targetPath = Join-Path $sitePackages $entry.FullName
+                $targetDir = Split-Path -Parent $targetPath
+                if (-not (Test-Path $targetDir)) {
+                    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+                }
+                $entryStream = $entry.Open()
+                $fileStream = [System.IO.File]::Create($targetPath)
+                $entryStream.CopyTo($fileStream)
+                $fileStream.Close()
+                $entryStream.Close()
+            }
+            $zip.Dispose()
+            $stream.Dispose()
+        }
+
+        # Overwrite with patched files
+        $patches = @{
+            'jinja2/debug.py'   = $patched_debug_py
+            'jinja2/_compat.py' = $patched_compat_py
+            'jinja2/lexer.py'   = $patched_lexer_py
+        }
+        foreach ($relPath in $patches.Keys) {
+            $targetPath = Join-Path $sitePackages $relPath
+            [System.IO.File]::WriteAllText($targetPath, $patches[$relPath], [System.Text.Encoding]::UTF8)
+        }
+    }
+
+    if ($Engine) { return $Engine }
 }
