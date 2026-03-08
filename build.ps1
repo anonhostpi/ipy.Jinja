@@ -68,11 +68,11 @@ function Patch-Compat {
 function Patch-Lexer {
     param([string]$PackageDir)
     $file = Join-Path $PackageDir 'jinja2/lexer.py'
-    $src = Get-Content $file -Raw
-    $old = "try:`n    # check if this Python supports Unicode identifiers`n    compile('f\xfc\xdf', '<unknown>', 'eval')`nexcept SyntaxError:`n    # no Unicode support, use ASCII identifiers`n    name_re = re.compile(r'[a-zA-Z_][a-zA-Z0-9_]*')`n    check_ident = False`nelse:`n    # Unicode support, build a pattern to match valid characters, and set flag`n    # to use str.isidentifier to validate during lexing`n    from jinja2 import _identifier`n    name_re = re.compile(r'[\w{0}]+'.format(_identifier.pattern))`n    check_ident = True`n    # remove the pattern from memory after building the regex`n    import sys`n    del sys.modules['jinja2._identifier']`n    import jinja2`n    del jinja2._identifier`n    del _identifier"
+    $src = Get-Content $file -Raw -Encoding UTF8
+    $pattern = '(?s)try:\s*\n\s*# check if this Python supports Unicode identifiers.*?del _identifier'
     $replacement = "name_re = re.compile(r'[a-zA-Z_][a-zA-Z0-9_]*')`ncheck_ident = False"
-    $patched = $src.Replace($old, $replacement)
-    Set-Content -Path $file -Value $patched -NoNewline
+    $patched = [regex]::Replace($src, $pattern, $replacement)
+    Set-Content -Path $file -Value $patched -NoNewline -Encoding UTF8
     Write-Host "Patched: jinja2/lexer.py"
 }
 function Build-VendorZip {
