@@ -1171,5 +1171,12 @@ class Lexer(object):
 
 function Install-IpyJinja {
     param([Parameter(Mandatory)][object]$Engine)
-    # WIP
+    $Engine.Add('/ipy/lib/site-packages', $script:jinjaWheelUrl)
+    $Engine.Add('/ipy/lib/site-packages', $script:markupsafeWheelUrl)
+    $Engine.Add('/ipy/lib/site-packages/jinja2/debug.py',        $script:patchedDebugPy)
+    $Engine.Add('/ipy/lib/site-packages/jinja2/_compat.py',      $script:patchedCompatPy)
+    $Engine.Add('/ipy/lib/site-packages/jinja2/lexer.py',        $script:patchedLexerPy)
+    $Engine.Add('/ipy/lib/site-packages/jinja2/asyncsupport.py', '# Stub: async not supported on IronPython 3.4')
+    $Engine.Add('/ipy/lib/site-packages/jinja2/asyncfilters.py', '# Stub: async not supported on IronPython 3.4')
+    return $Engine
 }
