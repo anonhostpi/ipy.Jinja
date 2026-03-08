@@ -1,8 +1,9 @@
+New-Module -Name 'ipy.Jinja' -ScriptBlock {
 # ipy.Jinja.ps1 -- Single-file PowerShell module to load Jinja2 + MarkupSafe
 # into an IronPythonEmbedded engine instance at runtime.
 #
 # Usage:
-#   . "$PSScriptRoot/ipy.Jinja.ps1"
+#   . "$PSScriptRoot/ipy.Jinja.ps1"  # auto-imports via New-Module
 #   Install-IpyJinja -Engine $engine                         # in-memory only
 #   Install-IpyJinja -Path "C:\ipyenv\v3.4.2"               # disk only
 #   Install-IpyJinja -Engine $engine -Path "C:\ipyenv\v3.4.2" # both
@@ -1239,3 +1240,6 @@ function Install-IpyJinja {
 
     if ($Engine) { return $Engine }
 }
+
+Export-ModuleMember -Function Install-IpyJinja
+} | Import-Module
