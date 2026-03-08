@@ -9,7 +9,7 @@ $jinjaWheelUrl    = 'https://files.pythonhosted.org/packages/65/e0/eb35e76280201
 $markupsafeWheelUrl = 'https://files.pythonhosted.org/packages/09/31/fe863b864cf3dfa11bce7a3bd41c4433d59b777ee0750b8d8c9a96f5ca98/MarkupSafe-1.1.1-cp34-cp34m-win_amd64.whl'
 
 # Patched Python source files (full content; loaded after wheel to overwrite originals)
-$script:patchedDebugPy    = @'
+$patchedDebugPy    = @'
 # -*- coding: utf-8 -*-
 """
     jinja2.debug
@@ -329,7 +329,7 @@ if tproxy is None:
             pass
 del _init_ugly_crap
 '@
-$script:patchedCompatPy   = @'
+$patchedCompatPy   = @'
 # -*- coding: utf-8 -*-
 """
     jinja2._compat
@@ -444,7 +444,7 @@ try:
 except ImportError:
     import collections as abc
 '@
-$script:patchedLexerPy    = @'
+$patchedLexerPy    = @'
 # -*- coding: utf-8 -*-
 """
     jinja2.lexer
