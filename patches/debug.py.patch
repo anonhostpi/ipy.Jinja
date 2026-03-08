@@ -1,9 +1,0 @@
---- a/jinja2/debug.py
-+++ b/jinja2/debug.py
-@@ -18,7 +16,7 @@
--def _init_ugly_crap():
--    # ... ctypes structure definitions and pointer manipulation ...
-+def _init_ugly_crap():
-+    """No-op: IronPython does not support CPython ctypes traceback rewriting."""
-+    def tb_set_next(tb, next): pass
-+    return tb_set_next
