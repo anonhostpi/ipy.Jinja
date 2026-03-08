@@ -1,7 +1,7 @@
 param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-Import-Module "$PSScriptRoot/ipy.Jinja.psd1" -Force
+. "$PSScriptRoot/ipy.Jinja.ps1"
 $builder = iwr 'https://raw.githubusercontent.com/anonhostpi/IronPythonEmbedded/main/IronPythonEmbedded.ps1' | iex
 $engine = $builder.Build()
 Install-IpyJinja -Engine $engine
