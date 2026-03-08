@@ -1173,8 +1173,8 @@ function Install-IpyJinja {
     param([Parameter(Mandatory)][object]$Engine)
     $Engine.Add('/ipy/lib/site-packages', $script:jinjaWheelUrl)
     $Engine.Add('/ipy/lib/site-packages', $script:markupsafeWheelUrl)
-    $Engine.Add('/ipy/lib/site-packages/jinja2/debug.py',        $script:patchedDebugPy)
-    $Engine.Add('/ipy/lib/site-packages/jinja2/_compat.py',      $script:patchedCompatPy)
-    $Engine.Add('/ipy/lib/site-packages/jinja2/lexer.py',        $script:patchedLexerPy)
+    $Engine.Add('/ipy/lib/site-packages/jinja2/debug.py',        $patchedDebugPy)
+    $Engine.Add('/ipy/lib/site-packages/jinja2/_compat.py',      $patchedCompatPy)
+    $Engine.Add('/ipy/lib/site-packages/jinja2/lexer.py',        $patchedLexerPy)
     return $Engine
 }
